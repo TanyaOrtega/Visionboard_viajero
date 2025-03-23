@@ -7,6 +7,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use((req, res, next) => {
+    res.setHeader(
+        "Content-Security-Policy",
+        "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+    );
+    next();
+});
+
+
 async function startServer() {
     try {
         await sequelize.authenticate();
@@ -15,20 +24,24 @@ async function startServer() {
         await sequelize.sync({ force: false }); 
         console.log('✅ Base de datos sincronizada.');
 
-        // Iniciar el servidor
-        const PORT = 3000;
+        // Usar el puerto dinámico de Render
+        const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
-            console.log(`Servidor corriendo en http://localhost:${PORT}`);
+            console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
         });
     } catch (error) {
-        console.error('Error al conectar con la base de datos:', error);
+        console.error('❌ Error al conectar con la base de datos:', error);
     }
 }
 
 startServer();
 
-// CRUD
+// Ruta raíz para evitar el error "Cannot GET /"
+app.get("/", (req, res) => {
+    res.send("¡Bienvenido a Visionboard Viajero API!");
+});
 
+// CRUD de Destinos
 app.get('/destinos', async (req, res) => {
     try {
         const destinos = await Destino.findAll();
