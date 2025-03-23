@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const sequelize = require('./database');
 const Destino = require('./models/destino'); 
@@ -7,41 +8,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use((req, res, next) => {
-    res.setHeader(
-        "Content-Security-Policy",
-        "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
-    );
-    next();
+// Servir los archivos estáticos (CSS, JS, imágenes) desde la carpeta frontend
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Ruta para servir index.html desde la carpeta frontend cuando se accede a la raíz
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));  // Servir el index.html desde frontend/
 });
 
+// CRUD
 
-async function startServer() {
-    try {
-        await sequelize.authenticate();
-        console.log('✅ Conexión a la base de datos establecida correctamente.');
-
-        await sequelize.sync({ force: false }); 
-        console.log('✅ Base de datos sincronizada.');
-
-        // Usar el puerto dinámico de Render
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => {
-            console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
-        });
-    } catch (error) {
-        console.error('❌ Error al conectar con la base de datos:', error);
-    }
-}
-
-startServer();
-
-// Ruta raíz para evitar el error "Cannot GET /"
-app.get("/", (req, res) => {
-    res.send("¡Bienvenido a Visionboard Viajero API!");
-});
-
-// CRUD de Destinos
+// Obtener todos los destinos
 app.get('/destinos', async (req, res) => {
     try {
         const destinos = await Destino.findAll();
@@ -51,6 +28,7 @@ app.get('/destinos', async (req, res) => {
     }
 });
 
+// Obtener un destino por ID
 app.get('/destinos/:id', async (req, res) => {
     try {
         const destino = await Destino.findByPk(req.params.id);
@@ -63,6 +41,7 @@ app.get('/destinos/:id', async (req, res) => {
     }
 });
 
+// Crear un nuevo destino
 app.post('/destinos', async (req, res) => {
     try {
         const nuevoDestino = await Destino.create(req.body);
@@ -72,6 +51,7 @@ app.post('/destinos', async (req, res) => {
     }
 });
 
+// Actualizar un destino
 app.put('/destinos/:id', async (req, res) => {
     try {
         const destino = await Destino.findByPk(req.params.id);
@@ -85,6 +65,7 @@ app.put('/destinos/:id', async (req, res) => {
     }
 });
 
+// Eliminar un destino
 app.delete('/destinos/:id', async (req, res) => {
     try {
         const destino = await Destino.findByPk(req.params.id);
@@ -97,3 +78,22 @@ app.delete('/destinos/:id', async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el destino' });
     }
 });
+
+async function startServer() {
+    try {
+        await sequelize.authenticate();
+        console.log('✅ Conexión a la base de datos establecida correctamente.');
+
+        await sequelize.sync({ force: false }); // Cambia a `true` solo si quieres borrar y recrear las tablas
+        console.log('✅ Base de datos sincronizada.');
+
+        const PORT = process.env.PORT || 3000; // Cambiar para usar un puerto dinámico en producción
+        app.listen(PORT, () => {
+            console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('❌ Error al conectar con la base de datos:', error);
+    }
+}
+
+startServer();
