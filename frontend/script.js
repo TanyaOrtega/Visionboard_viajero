@@ -1,4 +1,12 @@
-const API_URL = "http://localhost:3000/destinos";
+const API_URL = window.location.hostname === 'localhost' 
+    ? "http://localhost:3000/destinos" 
+    : "https://visionboard-viajero.onrender.com/destinos";
+
+// Función para cargar destinos
+document.addEventListener("DOMContentLoaded", cargarDestinos);
+
+// Resto del código sigue igual
+
 
 // Cargar destinos
 document.addEventListener("DOMContentLoaded", cargarDestinos);

@@ -1,8 +1,11 @@
+// Cargar las variables de entorno desde .env
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const sequelize = require('./database');
-const Destino = require('./models/destino'); 
+const Destino = require('./models/destino');
 
 const app = express();
 app.use(cors());
@@ -79,6 +82,12 @@ app.delete('/destinos/:id', async (req, res) => {
     }
 });
 
+// Configurar la URL de la API dependiendo del entorno
+const API_URL = process.env.NODE_ENV === 'production'
+    ? process.env.API_URL_PRODUCTION
+    : process.env.API_URL_LOCAL;
+
+// Iniciar el servidor
 async function startServer() {
     try {
         await sequelize.authenticate();
@@ -87,9 +96,9 @@ async function startServer() {
         await sequelize.sync({ force: false }); // Cambia a `true` solo si quieres borrar y recrear las tablas
         console.log('✅ Base de datos sincronizada.');
 
-        const PORT = process.env.PORT || 3000; // Cambiar para usar un puerto dinámico en producción
+        const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
-            console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+            console.log(`🚀 Servidor corriendo en ${API_URL}:${PORT}`);
         });
     } catch (error) {
         console.error('❌ Error al conectar con la base de datos:', error);
@@ -97,3 +106,4 @@ async function startServer() {
 }
 
 startServer();
+
